@@ -28,11 +28,13 @@ Restore with the server stopped: preserve the existing data folder, create a fre
 
 ## What the two tabs do
 
-**Investment dashboard:** company, round, amount, original currency, investors/grantors, announcement date, source evidence, review status, quarterly activity and reported valuations. Grants, debt and acquisitions are labeled. Undisclosed amounts remain unknown. Non-USD amounts are not silently converted. Cumulative round totals are excluded from funding sums to reduce double counting.
+**Investment dashboard:** company, round, amount, original currency, investors/grantors, announcement date, source evidence, review status, quarterly activity and reported valuations. Grants, debt and acquisitions are labeled. Undisclosed amounts and currencies remain unknown; a disclosed amount requires a sourced currency code. Non-USD amounts are not silently converted. Cumulative round totals are excluded from funding sums to reduce double counting.
 
 **Investor dashboard:** firms ranked by largest tracked financing and recency, with thesis, partners, stage/geography, fit notes, watchlists and your own notes. This ranks participation in financing rounds; the total round is not an investor's individual check. Disclosed checks are stored separately.
 
 The score is `100 × [w × min(1, ln(1 + biggest_round_USD) / ln(1 + 1 billion)) + (1 − w) × 2^(−days_since_latest / half_life)]`. Defaults are 55% size and a 180-day half-life. Only confirmed equity/grant records with non-cumulative amounts contribute; unknown amounts have zero size contribution. Profiles without investment evidence have zero activity. Activity is not a fit score or a probability of funding.
+
+**Partner deep dives:** the current top five investors have a **Deep dive** button. A cited research workflow finds a relevant current partner (or grant programme lead), public professional contact, theses, interests, relevant writings, attributed investment outcomes and a personalized draft. Emails are never guessed; general firm inboxes are labeled and missing addresses remain unknown. Activity shows progress, then **Partner profile** opens the saved result. Edit, save or copy the message; nothing is sent. Refreshing research preserves saved draft edits. Profiles remain accessible if rankings change, and all trigger types share the daily run cap.
 
 **Warm introductions:** add directed relationships from `You` to people/companies and onward to a firm. The app ranks paths of up to three hops, preferring confirmed relationships. Public portfolio connections are marked unverified. It cannot infer your private network from public news and never invents a mutual contact or sends outreach. Contact willingness still needs checking. The route-strength score is a heuristic, not a probability.
 
@@ -43,6 +45,7 @@ The Python workflow loads these same instruction files used by Codex:
 * `skills/discover-venture-investments/SKILL.md`
 * `skills/research-investor-fit/SKILL.md`
 * `skills/plan-warm-intros/SKILL.md`
+* `skills/research-investor-partner/SKILL.md`
 
 Copy a skill directory into your Codex skills directory to use it interactively, or leave the bundled skills in place for the app. The introduction UI uses a deterministic graph search; the warm-intro skill gives an analyst a reusable research/outreach-planning procedure.
 
@@ -52,7 +55,7 @@ Every discovery run polls `https://dealroom.co/api/live-signals?limit=20` withou
 
 The included eight announcements and fifteen profiles are a selective historical starter set, not a comprehensive or current sector census. Sources are linked in each record. Partner roles and investment theses can become stale. Valuation fields distinguish pre-money, post-money and unspecified basis; missing values stay unknown. Compare business model, stage and date before using a valuation as a comparable.
 
-The app sends research focus, watched firm names, news tips and public-source text to OpenAI. It does **not** send private investor notes or the relationship graph. Calls use `store: false`. Keys remain server-side. `OPENAI_MODEL` is configurable; the default is `gpt-5.5`, and your account must support the selected model, web search and structured output.
+The app sends research focus, watched firm names, news tips and public-source text to OpenAI. It does **not** send private investor notes, saved draft edits or the relationship graph. Calls use `store: false`. Keys remain server-side. `OPENAI_MODEL` is configurable; the default is `gpt-5.5`, and your account must support the selected model, web search and structured output.
 
 ## Automatic updates
 
@@ -87,7 +90,7 @@ See `scripts/send_news_tip.py` for a working sender. Store the secret in the sen
 
 The endpoint must be reachable from the sender. On a local computer that requires an approved HTTPS tunnel and the computer to remain awake. For a Vercel deployment protected by Vercel Authentication, an external sender also needs an owner-approved Vercel automation access mechanism. The deployed application does not disable platform protection. Never publish an access token or a platform bypass secret.
 
-All trigger types share a rolling 24-hour research-run cap (default eight). Up to six search-tool calls per run. This is a run cap, not a dollar budget. Set OpenAI project spending limits too. Delivery IDs prevent duplicate webhook jobs; revised investment facts enter review instead of silently overwriting confirmed records.
+All trigger types share a rolling 24-hour research-run cap (default eight). Up to six search-tool calls per discovery or firm run, and eight per partner deep dive. This is a run cap, not a dollar budget. Set OpenAI project spending limits too. Delivery IDs prevent duplicate webhook jobs; revised investment facts enter review instead of silently overwriting confirmed records.
 
 ## GitHub and development
 
@@ -108,4 +111,4 @@ Connect the repository to Vercel for deployment on pushes. Python-only checks:
 python3 -m unittest discover -s tests -v
 ```
 
-Twenty-six tests cover validation, auth, signed webhooks, deduplication/revisions, persistence, ranking, introduction paths, research provenance, combined-source discovery, feed failures/limits/redirects and cloud write/claim concurrency. Live OpenAI calls require your key and are not part of the offline suite. See `docs/architecture.md` for deployment details. MIT licensed.
+Thirty-four tests cover validation, auth, signed webhooks, deduplication/revisions, persistence, ranking, introduction paths, research provenance, combined-source discovery, feed failures/limits/redirects and cloud write/claim concurrency. Live OpenAI calls require your key and are not part of the offline suite. See `docs/architecture.md` for deployment details. MIT licensed.

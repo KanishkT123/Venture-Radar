@@ -1,0 +1,4 @@
+interface:
+  display_name: "Investor Partner Deep Dive"
+  short_description: "Research investor partners and draft sourced outreach"
+  default_prompt: "Use $research-investor-partner to profile a relevant investor partner and draft an introduction message."

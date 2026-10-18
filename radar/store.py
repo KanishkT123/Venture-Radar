@@ -28,6 +28,7 @@ class Store:
                 announced_on TEXT, status TEXT, duplicate_of TEXT, data TEXT, created_at REAL, updated_at REAL);
             CREATE INDEX IF NOT EXISTS event_match ON investments(company_key, round_key);
             CREATE TABLE IF NOT EXISTS profiles(name_key TEXT PRIMARY KEY, data TEXT, notes TEXT DEFAULT '', watched INTEGER DEFAULT 0, updated_at REAL);
+            CREATE TABLE IF NOT EXISTS partner_profiles(firm_key TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at REAL, draft_subject TEXT, draft_message TEXT);
             CREATE TABLE IF NOT EXISTS edges(id TEXT PRIMARY KEY, data TEXT);
             CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, kind TEXT, payload TEXT, status TEXT,
                 created_at REAL, started_at REAL, ended_at REAL, attempts INTEGER DEFAULT 0, result TEXT, error TEXT);
@@ -150,6 +151,30 @@ class Store:
                 c.execute('INSERT INTO profiles(name_key,data,updated_at) VALUES(?,?,?)', (norm(name), json.dumps(d), time.time()))
             c.execute('UPDATE profiles SET notes=?,watched=? WHERE name_key=?', (notes, int(watched), norm(name)))
 
+    def partner_profiles(self):
+        with self.db() as c:
+            return [{**json.loads(r['data']), 'updated_at': r['updated_at'],
+                     'saved_draft': {'subject': r['draft_subject'], 'message': r['draft_message']} if r['draft_subject'] is not None else None}
+                    for r in c.execute('SELECT * FROM partner_profiles')]
+
+    def save_partner_profile(self, raw):
+        from .partners import partner_profile
+        data = partner_profile(raw)
+        with self.db() as c:
+            c.execute("""INSERT INTO partner_profiles(firm_key,data,updated_at) VALUES(?,?,?)
+                         ON CONFLICT(firm_key) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at""",
+                      (norm(data['firm']), json.dumps(data), time.time()))
+
+    def save_partner_draft(self, firm, subject, message):
+        from .models import string
+        firm = string(firm, 'investor', 200)
+        subject = string(subject, 'draft subject', 200)
+        message = string(message, 'draft message', 10000)
+        with self.db() as c:
+            if not c.execute('UPDATE partner_profiles SET draft_subject=?,draft_message=? WHERE firm_key=?',
+                             (subject, message, norm(firm))).rowcount:
+                raise ValueError('Create a partner profile before saving a draft.')
+
     def edges(self):
         with self.db() as c:
             return [{**json.loads(r['data']), 'id': r['id']} for r in c.execute('SELECT * FROM edges')]
@@ -175,8 +200,10 @@ class Store:
             c.execute('DELETE FROM edges WHERE id=?', (ident,))
 
     def enqueue(self, kind='discovery', payload=None, delivery_id=None):
-        if kind not in ('discovery', 'investor'):
+        if kind not in ('discovery', 'investor', 'partner'):
             raise ValueError('Invalid workflow.')
+        if kind == 'partner' and (not isinstance((payload or {}).get('investor'), str) or not 1 <= len(payload['investor'].strip()) <= 200):
+            raise ValueError('Investor name required.')
         limit = self.settings()['max_runs_per_day']
         with self.db() as c:
             c.execute('BEGIN IMMEDIATE')
@@ -184,6 +211,10 @@ class Store:
                 old = c.execute('SELECT job_id FROM deliveries WHERE id=?', (delivery_id,)).fetchone()
                 if old:
                     return old[0]
+            if kind == 'partner':
+                for row in c.execute("SELECT id,payload FROM jobs WHERE kind='partner' AND status IN ('queued','running')"):
+                    if norm(json.loads(row['payload'])['investor']) == norm(payload['investor']):
+                        return row['id']
             # Cap queued + executed jobs to bound repeated webhook/API spending.
             count = c.execute('SELECT count(*) FROM jobs WHERE created_at>?', (time.time() - 86400,)).fetchone()[0]
             if count >= limit:
@@ -196,7 +227,10 @@ class Store:
 
     def jobs(self):
         with self.db() as c:
-            return [dict(r) for r in c.execute('SELECT id,kind,status,created_at,started_at,ended_at,attempts,result,error FROM jobs ORDER BY created_at DESC LIMIT 40')]
+            rows = [dict(r) for r in c.execute('SELECT id,kind,payload,status,created_at,started_at,ended_at,attempts,result,error FROM jobs ORDER BY created_at DESC LIMIT 40')]
+            for row in rows:
+                row['target_investor'] = json.loads(row.pop('payload')).get('investor')
+            return rows
 
     def recover(self):
         with self.db() as c:

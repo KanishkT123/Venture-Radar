@@ -78,7 +78,7 @@ def make_handler(store):
                     events = store.investments()
                     self.send({'settings': settings, 'investments': events,
                                'investors': rankings(events, store.profiles(), settings), 'edges': store.edges(),
-                               'jobs': store.jobs(), 'configured': bool(os.getenv('OPENAI_API_KEY')),
+                               'partner_profiles': store.partner_profiles(), 'jobs': store.jobs(), 'configured': bool(os.getenv('OPENAI_API_KEY')),
                                'model': os.getenv('OPENAI_MODEL', 'gpt-5.5'),
                                'hosted': bool(os.getenv('VERCEL')),
                                'webhook_configured': bool(os.getenv('RADAR_WEBHOOK_SECRET'))})
@@ -87,7 +87,7 @@ def make_handler(store):
                     self.send(paths(name, store.edges(), store.investments()))
                 elif p.path == '/api/export':
                     self.send({'schema_version': 1, 'settings': store.settings(), 'investments': store.investments(),
-                               'profiles': store.profiles(), 'edges': store.edges(), 'jobs': store.jobs()}, attachment='venture-radar-export.json')
+                               'profiles': store.profiles(), 'partner_profiles': store.partner_profiles(), 'edges': store.edges(), 'jobs': store.jobs()}, attachment='venture-radar-export.json')
                 elif p.path == '/api/export.csv':
                     output = io.StringIO()
                     writer = csv.writer(output)
@@ -123,7 +123,7 @@ def make_handler(store):
                 d = json.loads(raw)
                 if not isinstance(d, dict):
                     raise ValueError('A JSON object is required.')
-                if is_hook or p in ('/api/refresh', '/api/investor/research'):
+                if is_hook or p in ('/api/refresh', '/api/investor/research', '/api/investor/deep-dive'):
                     if not os.getenv('OPENAI_API_KEY'):
                         raise ValueError('Set OPENAI_API_KEY in your environment and restart or redeploy first.')
                     payload = {}
@@ -134,12 +134,21 @@ def make_handler(store):
                         if not tip['title'] and not tip['url']:
                             raise ValueError('Webhook needs a title or article URL.')
                         payload = {'tip': tip}
-                    elif p.endswith('/research'):
+                    elif p in ('/api/investor/research', '/api/investor/deep-dive'):
                         if not isinstance(d.get('investor'), str) or not 1 <= len(d['investor']) <= 200:
                             raise ValueError('Investor name required.')
                         payload = {'investor': d['investor']}
-                    ident = store.enqueue('investor' if p.endswith('/research') else 'discovery', payload, delivery)
+                    kind = 'investor' if p.endswith('/research') else 'discovery'
+                    if p.endswith('/deep-dive'):
+                        top = rankings(store.investments(), store.profiles(), store.settings())[:5]
+                        if payload['investor'] not in [item['name'] for item in top]:
+                            raise ValueError('Deep dives are available for the current top five investors.')
+                        kind = 'partner'
+                    ident = store.enqueue(kind, payload, delivery)
                     self.send({'job_id': ident}, 202)
+                elif p == '/api/partner/draft':
+                    store.save_partner_draft(d['investor'], d['subject'], d['message'])
+                    self.send({'saved': True})
                 elif p == '/api/settings':
                     self.send(store.set_settings(d))
                 elif p == '/api/review':

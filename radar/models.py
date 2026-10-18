@@ -51,11 +51,17 @@ def investment(data):
         d[k] = d.get(k, default)
         if d[k] not in choices:
             raise ValueError(f'Invalid {k}.')
-    d['currency'] = string(d.get('currency', 'USD'), 'currency', 3).upper()
-    if not re.fullmatch('[A-Z]{3}', d['currency']):
-        raise ValueError('Currency must be a three-letter code.')
+    raw_currency = d.get('currency')
+    if raw_currency is None or (isinstance(raw_currency, str) and raw_currency.strip().lower() in ('', 'unknown', 'undisclosed', 'not disclosed', 'n/a')):
+        d['currency'] = None
+    else:
+        d['currency'] = string(raw_currency, 'currency', 100).upper()
+        if not re.fullmatch('[A-Z]{3}', d['currency']):
+            raise ValueError('Currency must be a three-letter code, or null for an undisclosed amount.')
     for k in ('amount', 'valuation_usd'):
         d[k] = number(d.get(k), k)
+    if d['amount'] is not None and d['currency'] is None:
+        raise ValueError('A disclosed amount requires a sourced three-letter currency code.')
     if (d['amount'] is None) != (d['amount_basis'] == 'undisclosed'):
         raise ValueError('Use undisclosed for a null amount; otherwise select an amount basis.')
     d['amount_usd'] = d['amount'] if d['currency'] == 'USD' else None
@@ -94,7 +100,8 @@ def obj(properties):
 S = {'type': 'string'}
 N = {'type': ['number', 'null']}
 SOURCE = obj({'url': S, 'title': S, 'publisher': S, 'evidence': S})
-INVESTMENT = obj({**{k: S for k in ('company', 'round', 'announced_on', 'sector', 'notes', 'currency')},
+INVESTMENT = obj({**{k: S for k in ('company', 'round', 'announced_on', 'sector', 'notes')},
+    'currency': {'type': ['string', 'null'], 'pattern': '^[A-Z]{3}$'},
     'kind': {'type': 'string', 'enum': ['equity', 'grant', 'debt', 'acquisition']},
     'amount_basis': {'type': 'string', 'enum': ['exact', 'at_least', 'approximate', 'undisclosed', 'cumulative']},
     'valuation_kind': {'type': 'string', 'enum': ['pre-money', 'post-money', 'unspecified']},

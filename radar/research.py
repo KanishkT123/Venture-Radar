@@ -86,6 +86,9 @@ def feed_headlines(query):
 
 def run_research(store, job, client=None):
     client = client or OpenAI()
+    if job['kind'] == 'partner':
+        from .partners import run_partner_research
+        return run_partner_research(store, job, client)
     settings = store.settings()
     payload = job['payload']
     warnings, headlines, source_checks = [], [], []
@@ -127,14 +130,19 @@ def run_research(store, job, client=None):
     allowed = cited_urls(researched)
     if not allowed:
         raise ValueError('Research returned no cited source URLs. Nothing was added.')
-    extracted = client.create(instructions=instructions+'\nExtract only facts supported by the cited report. Use only the allowed source URLs. Return at most 25 investments and 15 profiles. Do not invent dates, currencies, valuations, checks, partners, or introductions. Use null for undisclosed amounts. Do not reproduce long source quotations; evidence must be brief paraphrases. Non-USD valuations must be omitted unless the source explicitly states a USD value.',
+    extracted = client.create(instructions=instructions+'\nExtract only facts supported by the cited report. Use only the allowed source URLs. Return at most 25 investments and 15 profiles. Do not invent dates, currencies, valuations, checks, partners, or introductions. Use null for undisclosed amounts. Currency must be a sourced uppercase three-letter ISO code; use null when the amount and currency are undisclosed. Omit a quantified event if its currency cannot be established; never guess USD. Do not reproduce long source quotations; evidence must be brief paraphrases. Non-USD valuations must be omitted unless the source explicitly states a USD value.',
                               input=json.dumps({'report': report, 'allowed_source_urls': sorted(allowed)}),
                               text={'format': {'type': 'json_schema', 'name': 'venture_research', 'strict': True, 'schema': EXTRACTION}},
                               max_output_tokens=14000)
     result = json.loads(response_text(extracted))
     if len(result['investments']) > 25 or len(result['profiles']) > 15:
         raise ValueError('Extraction exceeded the allowed batch size.')
-    events = [investment(d) for d in result['investments']]
+    events = []
+    for row in result['investments']:
+        try:
+            events.append(investment(row))
+        except (ValueError, TypeError) as error:
+            raise ValueError(f"Could not validate investment {str(row.get('company', 'Unknown'))[:100]}: {error} No records from this batch were saved.") from None
     profiles = [profile(d) for d in result['profiles']]
     # Validate the whole batch before writing any record. URL provenance is necessary,
     # but not semantic fact verification; every AI event still requires review.

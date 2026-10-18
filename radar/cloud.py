@@ -74,8 +74,8 @@ class Blob:
 
 
 class CloudStore:
-    READS = {'settings', 'investments', 'profiles', 'edges', 'jobs'}
-    WRITES = {'set_settings', 'add_investment', 'review', 'save_profile', 'investor_notes',
+    READS = {'settings', 'investments', 'profiles', 'partner_profiles', 'edges', 'jobs'}
+    WRITES = {'save_partner_profile', 'save_partner_draft', 'set_settings', 'add_investment', 'review', 'save_profile', 'investor_notes',
               'add_edge', 'delete_edge', 'enqueue', 'claim', 'finish', 'schedule_if_due',
               'expire_jobs', 'apply_batch'}
 
