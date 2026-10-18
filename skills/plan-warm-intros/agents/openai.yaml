@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan warm introductions"
+  short_description: "Rank evidence-backed introduction routes locally"
+  default_prompt: "Use $plan-warm-intros to update my Venture Radar workspace."

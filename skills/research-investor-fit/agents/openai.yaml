@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research investor fit"
+  short_description: "Profile investor partners, thesis and sector fit"
+  default_prompt: "Use $research-investor-fit to update my Venture Radar workspace."

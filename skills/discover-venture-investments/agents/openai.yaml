@@ -1,0 +1,4 @@
+interface:
+  display_name: "Discover venture investments"
+  short_description: "Find sourced funding events and disclosed valuations"
+  default_prompt: "Use $discover-venture-investments to update my Venture Radar workspace."

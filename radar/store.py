@@ -1,0 +1,258 @@
+"""SQLite persistence; each method owns its transaction and connection."""
+import contextlib
+import datetime as dt
+import json
+import sqlite3
+import time
+import uuid
+from pathlib import Path
+from .models import investment, profile, norm
+
+DEFAULTS = {'venture': 'Cicada Health', 'focus': 'Saliva biosensing, hormone monitoring, sleep and circadian health, wearable diagnostics, electrochemical aptamer sensors',
+            'schedule_enabled': False, 'interval_hours': 6, 'lookback_days': 30,
+            'half_life_days': 180, 'size_weight': 0.55, 'major_threshold_usd': 10000000,
+            'max_runs_per_day': 8, 'feed_query': '(biosensor OR "hormone monitoring" OR "sleep technology") (funding OR investment OR grant)',
+            'last_scheduled_at': 0}
+
+
+class Store:
+    def __init__(self, directory):
+        self.directory = Path(directory)
+        self.directory.mkdir(parents=True, exist_ok=True)
+        self.path = self.directory / 'radar.sqlite3'
+        with self.db() as c:
+            c.executescript('''
+            PRAGMA journal_mode=WAL;
+            CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS investments(id TEXT PRIMARY KEY, company_key TEXT, round_key TEXT,
+                announced_on TEXT, status TEXT, duplicate_of TEXT, data TEXT, created_at REAL, updated_at REAL);
+            CREATE INDEX IF NOT EXISTS event_match ON investments(company_key, round_key);
+            CREATE TABLE IF NOT EXISTS profiles(name_key TEXT PRIMARY KEY, data TEXT, notes TEXT DEFAULT '', watched INTEGER DEFAULT 0, updated_at REAL);
+            CREATE TABLE IF NOT EXISTS edges(id TEXT PRIMARY KEY, data TEXT);
+            CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, kind TEXT, payload TEXT, status TEXT,
+                created_at REAL, started_at REAL, ended_at REAL, attempts INTEGER DEFAULT 0, result TEXT, error TEXT);
+            CREATE TABLE IF NOT EXISTS deliveries(id TEXT PRIMARY KEY, job_id TEXT, created_at REAL);
+            CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, event TEXT, detail TEXT, created_at REAL);
+            ''')
+            c.execute('INSERT OR IGNORE INTO meta VALUES(?,?)', ('settings', json.dumps(DEFAULTS)))
+            c.execute('INSERT OR IGNORE INTO meta VALUES(?,?)', ('schema_version', '1'))
+
+    @contextlib.contextmanager
+    def db(self):
+        c = sqlite3.connect(self.path, timeout=20)
+        c.row_factory = sqlite3.Row
+        c.execute('PRAGMA busy_timeout=20000')
+        try:
+            with c:
+                yield c
+        finally:
+            c.close()
+
+    def settings(self):
+        with self.db() as c:
+            return {**DEFAULTS, **json.loads(c.execute("SELECT value FROM meta WHERE key='settings'").fetchone()[0])}
+
+    def set_settings(self, values):
+        d = self.settings()
+        for k, v in values.items():
+            if k not in DEFAULTS or k == 'last_scheduled_at':
+                continue
+            d[k] = v
+        for k, lo, hi in [('interval_hours', 1, 168), ('lookback_days', 1, 730), ('half_life_days', 1, 1825),
+                          ('size_weight', 0, 1), ('major_threshold_usd', 0, 1e12), ('max_runs_per_day', 1, 100)]:
+            v = d[k]
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or not lo <= v <= hi:
+                raise ValueError(f'{k} must be between {lo} and {hi}.')
+        if type(d['schedule_enabled']) is not bool:
+            raise ValueError('schedule_enabled must be true or false.')
+        for k in ('focus', 'venture', 'feed_query'):
+            if not isinstance(d[k], str) or not 1 <= len(d[k]) <= 2000:
+                raise ValueError(f'Invalid {k}.')
+        with self.db() as c:
+            c.execute("UPDATE meta SET value=? WHERE key='settings'", (json.dumps(d),))
+        return d
+
+    def investments(self):
+        with self.db() as c:
+            return [{**json.loads(r['data']), **{k: r[k] for k in ('id', 'status', 'duplicate_of', 'created_at', 'updated_at')}}
+                    for r in c.execute('SELECT * FROM investments ORDER BY announced_on DESC, created_at DESC')]
+
+    def add_investment(self, raw, status='needs_review', replaces=None):
+        d = investment(raw)
+        now, match = time.time(), None
+        with self.db() as c:
+            c.execute('BEGIN IMMEDIATE')
+            if replaces:
+                if not c.execute('SELECT 1 FROM investments WHERE id=?', (replaces,)).fetchone():
+                    raise ValueError('Original record not found.')
+                match = replaces
+            rows = c.execute('SELECT * FROM investments WHERE company_key=? AND round_key=?', (norm(d['company']), norm(d['round']))).fetchall()
+            for r in rows:
+                if replaces:
+                    break
+                gap = abs((dt.date.fromisoformat(r['announced_on']) - dt.date.fromisoformat(d['announced_on'])).days)
+                if gap <= 14:
+                    old = json.loads(r['data'])
+                    same = all(old[k] == d[k] for k in ('amount', 'currency', 'valuation_usd', 'valuation_kind', 'kind', 'amount_basis'))
+                    same = same and sorted((norm(x['name']), x['role'], x['check_usd']) for x in old['investors']) == sorted((norm(x['name']), x['role'], x['check_usd']) for x in d['investors'])
+                    if same:
+                        old['sources'] = list({s['url']: s for s in old['sources'] + d['sources']}.values())
+                        c.execute('UPDATE investments SET data=?, updated_at=? WHERE id=?', (json.dumps(old), now, r['id']))
+                        return r['id'], False
+                    if r['status'] != 'rejected':
+                        match = r['id']
+            ident = str(uuid.uuid4())
+            c.execute('INSERT INTO investments VALUES(?,?,?,?,?,?,?,?,?)', (ident, norm(d['company']), norm(d['round']), d['announced_on'],
+                      'needs_review' if match else status, match, json.dumps(d), now, now))
+            c.execute('INSERT INTO audit(event,detail,created_at) VALUES(?,?,?)', ('investment.added', ident, now))
+        return ident, True
+
+    def review(self, ident, status):
+        if status not in ('confirmed', 'rejected', 'needs_review'):
+            raise ValueError('Invalid review status.')
+        with self.db() as c:
+            row = c.execute('SELECT * FROM investments WHERE id=?', (ident,)).fetchone()
+            if not row:
+                raise ValueError('Investment not found.')
+            if status == 'confirmed':
+                # Confirming a revision (or restoring its ancestor) must not leave
+                # two members of the same revision family in headline metrics.
+                related = {ident}
+                pairs = c.execute('SELECT id,duplicate_of FROM investments WHERE duplicate_of IS NOT NULL').fetchall()
+                while True:
+                    expanded = related | {x for r in pairs if r['id'] in related or r['duplicate_of'] in related for x in (r['id'], r['duplicate_of'])}
+                    if expanded == related:
+                        break
+                    related = expanded
+                for other in related - {ident}:
+                    c.execute("UPDATE investments SET status='rejected',updated_at=? WHERE id=?", (time.time(), other))
+            c.execute('UPDATE investments SET status=?,updated_at=? WHERE id=?', (status, time.time(), ident))
+            c.execute('INSERT INTO audit(event,detail,created_at) VALUES(?,?,?)', ('investment.' + status, ident, time.time()))
+
+    def save_profile(self, raw):
+        d = profile(raw)
+        with self.db() as c:
+            c.execute('''INSERT INTO profiles(name_key,data,updated_at) VALUES(?,?,?)
+                         ON CONFLICT(name_key) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at''',
+                      (norm(d['name']), json.dumps(d), time.time()))
+
+    def profiles(self):
+        with self.db() as c:
+            return [{**json.loads(r['data']), 'notes': r['notes'], 'watched': bool(r['watched']), 'updated_at': r['updated_at']}
+                    for r in c.execute('SELECT * FROM profiles')]
+
+    def investor_notes(self, name, notes, watched):
+        if not isinstance(notes, str) or len(notes) > 10000 or type(watched) is not bool:
+            raise ValueError('Invalid investor notes.')
+        with self.db() as c:
+            if not c.execute('SELECT 1 FROM profiles WHERE name_key=?', (norm(name),)).fetchone():
+                d = {'name': name, 'thesis': '', 'partners': '', 'stage': '', 'geography': '', 'fit_notes': '', 'sources': []}
+                c.execute('INSERT INTO profiles(name_key,data,updated_at) VALUES(?,?,?)', (norm(name), json.dumps(d), time.time()))
+            c.execute('UPDATE profiles SET notes=?,watched=? WHERE name_key=?', (notes, int(watched), norm(name)))
+
+    def edges(self):
+        with self.db() as c:
+            return [{**json.loads(r['data']), 'id': r['id']} for r in c.execute('SELECT * FROM edges')]
+
+    def add_edge(self, d):
+        from .models import string, url
+        edge = {k: string(d.get(k, ''), k, 2000) for k in ('from_name', 'to_name', 'relationship', 'evidence')}
+        if not all(edge[k] for k in ('from_name', 'to_name', 'relationship', 'evidence')):
+            raise ValueError('Relationship endpoints, description, and evidence are required.')
+        edge['confirmed'] = d.get('confirmed', False) is True
+        edge['strength'] = float(d.get('strength', 0.6))
+        if not 0 < edge['strength'] <= 1:
+            raise ValueError('Strength must be greater than 0 and at most 1.')
+        edge['source_url'] = url(d['source_url']) if d.get('source_url') else ''
+        edge['updated_at'] = time.time()
+        with self.db() as c:
+            ident = str(uuid.uuid4())
+            c.execute('INSERT INTO edges VALUES(?,?)', (ident, json.dumps(edge)))
+        return ident
+
+    def delete_edge(self, ident):
+        with self.db() as c:
+            c.execute('DELETE FROM edges WHERE id=?', (ident,))
+
+    def enqueue(self, kind='discovery', payload=None, delivery_id=None):
+        if kind not in ('discovery', 'investor'):
+            raise ValueError('Invalid workflow.')
+        limit = self.settings()['max_runs_per_day']
+        with self.db() as c:
+            c.execute('BEGIN IMMEDIATE')
+            if delivery_id:
+                old = c.execute('SELECT job_id FROM deliveries WHERE id=?', (delivery_id,)).fetchone()
+                if old:
+                    return old[0]
+            # Cap queued + executed jobs to bound repeated webhook/API spending.
+            count = c.execute('SELECT count(*) FROM jobs WHERE created_at>?', (time.time() - 86400,)).fetchone()[0]
+            if count >= limit:
+                raise ValueError('Daily research-run limit reached. Change the limit in settings if needed.')
+            ident = str(uuid.uuid4())
+            c.execute('INSERT INTO jobs(id,kind,payload,status,created_at) VALUES(?,?,?,?,?)', (ident, kind, json.dumps(payload or {}), 'queued', time.time()))
+            if delivery_id:
+                c.execute('INSERT INTO deliveries VALUES(?,?,?)', (delivery_id, ident, time.time()))
+            return ident
+
+    def jobs(self):
+        with self.db() as c:
+            return [dict(r) for r in c.execute('SELECT id,kind,status,created_at,started_at,ended_at,attempts,result,error FROM jobs ORDER BY created_at DESC LIMIT 40')]
+
+    def recover(self):
+        with self.db() as c:
+            c.execute("UPDATE jobs SET status=CASE WHEN attempts<2 THEN 'queued' ELSE 'failed' END,error='Interrupted by shutdown; research may incur a repeated API charge.' WHERE status='running'")
+
+    def expire_jobs(self):
+        with self.db() as c:
+            c.execute("UPDATE jobs SET status='failed',ended_at=?,error='Execution interrupted or timed out. Retry manually; the previous request may have been billed.' WHERE status='running' AND started_at<?", (time.time(), time.time()-600))
+
+    def apply_batch(self, events, profiles):
+        results = [self.add_investment(event) for event in events]
+        for item in profiles:
+            self.save_profile(item)
+        return results
+
+    def claim(self, ident=None):
+        with self.db() as c:
+            c.execute('BEGIN IMMEDIATE')
+            r = c.execute("SELECT * FROM jobs WHERE status='queued' AND (? IS NULL OR id=?) ORDER BY created_at LIMIT 1", (ident, ident)).fetchone()
+            if not r:
+                return None
+            c.execute("UPDATE jobs SET status='running',started_at=?,attempts=attempts+1 WHERE id=?", (time.time(), r['id']))
+            return {**dict(r), 'payload': json.loads(r['payload'])}
+
+    def finish(self, ident, result=None, error=None):
+        with self.db() as c:
+            c.execute('UPDATE jobs SET status=?,ended_at=?,result=?,error=? WHERE id=?',
+                      ('failed' if error else 'completed', time.time(), json.dumps(result) if result is not None else None, error, ident))
+
+    def schedule_if_due(self):
+        s = self.settings()
+        if s['schedule_enabled'] and time.time() - s['last_scheduled_at'] >= s['interval_hours'] * 3600:
+            with self.db() as c:
+                active = c.execute("SELECT 1 FROM jobs WHERE status IN ('queued','running')").fetchone()
+            if not active:
+                self.enqueue()
+                s['last_scheduled_at'] = time.time()
+                with self.db() as c:
+                    c.execute("UPDATE meta SET value=? WHERE key='settings'", (json.dumps(s),))
+
+    def seed(self):
+        with self.db() as c:
+            if c.execute("SELECT 1 FROM meta WHERE key='seeded'").fetchone():
+                return
+        seed = json.loads((Path(__file__).parent.parent / 'examples' / 'starter-data.json').read_text())
+        for row in seed['investments']:
+            self.add_investment(row, 'confirmed')
+        for row in seed['profiles']:
+            self.save_profile(row)
+        with self.db() as c:
+            c.execute("INSERT OR IGNORE INTO meta VALUES('seeded','1')")
+
+    def backup(self, path):
+        with self.db() as c:
+            target = sqlite3.connect(path)
+            try:
+                c.backup(target)
+            finally:
+                target.close()

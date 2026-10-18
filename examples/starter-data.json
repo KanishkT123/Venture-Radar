@@ -1,0 +1,546 @@
+{
+  "as_of": "2026-10-18",
+  "coverage": "Selective sourced historical examples; not comprehensive or guaranteed current.",
+  "investments": [
+    {
+      "company": "Eight Sleep",
+      "round": "Strategic investment",
+      "announced_on": "2026-03-04",
+      "amount": null,
+      "currency": "USD",
+      "amount_basis": "undisclosed",
+      "sector": "Sleep technology",
+      "kind": "equity",
+      "valuation_usd": 1500000000,
+      "valuation_kind": "unspecified",
+      "notes": "Valuation comparable for a scaled sleep platform. The cited primary announcement does not disclose the check size or pre/post-money basis.",
+      "investors": [
+        {
+          "name": "Tether Investments",
+          "role": "participant",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://tether.io/news/tether-makes-strategic-investment-in-eight-sleep-at-1-5b-to-accelerate-sustainable-health-intelligence/",
+          "title": "Tether invests in Eight Sleep",
+          "publisher": "Tether Investments",
+          "evidence": "March 4, 2026 announcement states a $1.5B valuation but does not disclose the investment amount."
+        }
+      ]
+    },
+    {
+      "company": "Oura",
+      "round": "Series E",
+      "announced_on": "2025-10-14",
+      "amount": 900000000,
+      "currency": "USD",
+      "amount_basis": "at_least",
+      "sector": "Sleep & wearables",
+      "kind": "equity",
+      "valuation_usd": 11000000000,
+      "valuation_kind": "unspecified",
+      "notes": "Amount reported as over $900M; valuation approximately $11B. Growth-stage comparable, not a like-for-like valuation for a pre-commercial sensor startup.",
+      "investors": [
+        {
+          "name": "Fidelity Management & Research",
+          "role": "lead",
+          "check_usd": null
+        },
+        {
+          "name": "ICONIQ",
+          "role": "participant",
+          "check_usd": null
+        },
+        {
+          "name": "Whale Rock",
+          "role": "participant",
+          "check_usd": null
+        },
+        {
+          "name": "Atreides",
+          "role": "participant",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.businesswire.com/news/home/20251014306417/en/URA-Raises-Over-%24900M-to-Accelerate-Global-Expansion-and-Health-Innovation",
+          "title": "Oura announces over $900M financing",
+          "publisher": "Oura / Business Wire",
+          "evidence": "Over $900M raised at approximately $11B valuation; Fidelity led with ICONIQ, Whale Rock and Atreides participating."
+        }
+      ]
+    },
+    {
+      "company": "Sibel Health",
+      "round": "Series C incl. extension",
+      "announced_on": "2025-10-14",
+      "amount": 39000000,
+      "currency": "USD",
+      "amount_basis": "cumulative",
+      "sector": "Clinical wearables",
+      "kind": "equity",
+      "valuation_usd": null,
+      "valuation_kind": "unspecified",
+      "notes": "Cumulative Series C total, excluded from capital totals and activity ranking. Steele and Dr\u00e4ger backed the initial round; Samsung Next and Maruho joined the extension. The extension increment is not inferred.",
+      "investors": [
+        {
+          "name": "Samsung Next",
+          "role": "participant",
+          "check_usd": null
+        },
+        {
+          "name": "Maruho",
+          "role": "participant",
+          "check_usd": null
+        },
+        {
+          "name": "Steele Foundation for Hope",
+          "role": "lead",
+          "check_usd": null
+        },
+        {
+          "name": "Dr\u00e4ger",
+          "role": "participant",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-secures-additional-series-c-extension-funding-to-39-million-from-key-strategic-investors-and-announces-new-board-of-director-appointments-302582505.html",
+          "title": "Sibel extends Series C to $39M",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Series C total reaches $39M; new strategic investors include Maruho and Samsung Next."
+        }
+      ]
+    },
+    {
+      "company": "Eli Health",
+      "round": "Series A",
+      "announced_on": "2025-06-10",
+      "amount": 12000000,
+      "currency": "USD",
+      "amount_basis": "exact",
+      "sector": "Hormone monitoring",
+      "kind": "equity",
+      "valuation_usd": null,
+      "valuation_kind": "unspecified",
+      "notes": "Saliva hormone testing comparator. Valuation and investor checks were not disclosed in these sources. Investor list is selective.",
+      "investors": [
+        {
+          "name": "BDC Capital \u2014 Thrive",
+          "role": "lead",
+          "check_usd": null
+        },
+        {
+          "name": "Muse Capital",
+          "role": "participant",
+          "check_usd": null
+        },
+        {
+          "name": "TELUS Global Ventures",
+          "role": "participant",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://eli.health/blogs/resources/we-re-building-the-interface-to-the-human-body",
+          "title": "Eli Health raises $12M Series A",
+          "publisher": "Eli Health",
+          "evidence": "The company reports a $12M Series A led by BDC Thrive, with Muse and TELUS participating."
+        },
+        {
+          "url": "https://www.blg.com/en/about-us/deals-and-suits/2025/06/eli-health-closes-17-million-series-a-to-fuel-launch-of-hormone-monitoring-tech",
+          "title": "Eli Health financing announcement",
+          "publisher": "BLG (company counsel)",
+          "evidence": "Counsel dates the announcement to June 10, 2025 and gives USD 12M, equivalent to CAD 17M in the announcement."
+        }
+      ]
+    },
+    {
+      "company": "Epicore Biosystems",
+      "round": "Series B extension",
+      "announced_on": "2025-05-01",
+      "amount": 6000000,
+      "currency": "USD",
+      "amount_basis": "exact",
+      "sector": "Biosensing",
+      "kind": "equity",
+      "valuation_usd": null,
+      "valuation_kind": "unspecified",
+      "notes": "Only the explicitly announced $6M increment is counted. Total Series B reached $32M. Unnamed investors are omitted.",
+      "investors": [
+        {
+          "name": "Alumni Ventures",
+          "role": "participant",
+          "check_usd": null
+        },
+        {
+          "name": "Joyance Partners",
+          "role": "participant",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/epicore-biosystems-expands-series-b-to-32m-to-power-global-growth-of-sweat-sensing-wearable-technology-302443704.html",
+          "title": "Epicore extends Series B by $6M",
+          "publisher": "Epicore / PR Newswire",
+          "evidence": "An additional $6M takes Series B to $32M. Named participants include Alumni Ventures and Joyance Partners."
+        }
+      ]
+    },
+    {
+      "company": "Sibel Health",
+      "round": "ARPA-H SBIR contract",
+      "announced_on": "2026-04-27",
+      "amount": 3500000,
+      "currency": "USD",
+      "amount_basis": "exact",
+      "sector": "Clinical wearables",
+      "kind": "grant",
+      "valuation_usd": null,
+      "valuation_kind": "unspecified",
+      "notes": "Non-dilutive Direct-to-Phase II SBIR contract, grouped under grants for this dashboard. This is an awarded contract, not a grant solicitation.",
+      "investors": [
+        {
+          "name": "ARPA-H",
+          "role": "grantor",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-awarded-a-3-5-million-arpa-h-direct-to-phase-ii-sbir-contract-to-develop-a-first-in-class-wearable-sensor-for-continuous-edema-monitoring-302753528.html",
+          "title": "Sibel Health \u2014 ARPA-H SBIR contract",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Announcement dated 2026-04-27 reports $3.5M for this financing or award."
+        }
+      ]
+    },
+    {
+      "company": "Epicore Biosystems",
+      "round": "Series B",
+      "announced_on": "2025-02-10",
+      "amount": 26000000,
+      "currency": "USD",
+      "amount_basis": "exact",
+      "sector": "Biosensing",
+      "kind": "equity",
+      "valuation_usd": null,
+      "valuation_kind": "unspecified",
+      "notes": "Initial Series B closing. The later $6M extension is tracked separately. Selective list of disclosed investors.",
+      "investors": [
+        {
+          "name": "Steele Foundation for Hope",
+          "role": "lead",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/epicore-biosystems-raises-26m-series-b-to-scale-its-sweat-sensing-wearables-and-cloud-analytics-platform-302371475.html",
+          "title": "Epicore Biosystems \u2014 Series B",
+          "publisher": "Epicore Biosystems / PR Newswire",
+          "evidence": "Announcement dated 2025-02-10 reports $26M for this financing or award."
+        }
+      ]
+    },
+    {
+      "company": "Sibel Health",
+      "round": "Series C",
+      "announced_on": "2025-03-20",
+      "amount": 30000000,
+      "currency": "USD",
+      "amount_basis": "exact",
+      "sector": "Clinical wearables",
+      "kind": "equity",
+      "valuation_usd": null,
+      "valuation_kind": "unspecified",
+      "notes": "Initial Series C closing. The subsequent $39M cumulative round announcement is excluded from totals.",
+      "investors": [
+        {
+          "name": "Steele Foundation for Hope",
+          "role": "lead",
+          "check_usd": null
+        },
+        {
+          "name": "Dr\u00e4ger",
+          "role": "participant",
+          "check_usd": null
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-announces-close-of-new-series-c-financing-and-new-fda-510k-clearance-302406584.html",
+          "title": "Sibel Health \u2014 Series C",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Announcement dated 2025-03-20 reports $30M for this financing or award."
+        }
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "name": "Muse Capital",
+      "thesis": "Early-stage consumer technology across care, living and play; portfolio includes hormone health.",
+      "partners": "Rachel Springate; Assia Grazioli-Venier",
+      "stage": "Early stage",
+      "geography": "United States; verify mandate",
+      "fit_notes": "Strong hormone-health overlap through Eli. Assess competing portfolio exposure and appetite for an initial research-market business.",
+      "sources": [
+        {
+          "url": "https://www.musecapital.vc/team/rachel-springate",
+          "title": "Rachel Springate biography",
+          "publisher": "Muse Capital",
+          "evidence": "Rachel Springate and Assia Grazioli-Venier founded Muse; its consumer investment areas include care, living and play."
+        },
+        {
+          "url": "https://eli.health/blogs/resources/we-re-building-the-interface-to-the-human-body",
+          "title": "Eli Health raises $12M Series A",
+          "publisher": "Eli Health",
+          "evidence": "The company reports a $12M Series A led by BDC Thrive, with Muse and TELUS participating."
+        }
+      ]
+    },
+    {
+      "name": "BDC Capital \u2014 Thrive",
+      "thesis": "Women-led Canadian technology companies; led Eli Health\u2019s Series A.",
+      "partners": "Current deal partner not verified",
+      "stage": "Venture; verify current stage criteria",
+      "geography": "Canada",
+      "fit_notes": "Direct hormone-sensing precedent, but Canadian and women-led eligibility constraints may make Cicada ineligible.",
+      "sources": [
+        {
+          "url": "https://www.bdc.ca/en/bdc-capital/venture-capital/funds/thrive-platform/thrive-venture-fund",
+          "title": "Thrive Venture Fund",
+          "publisher": "BDC Capital",
+          "evidence": "The fund focuses on women-led companies in Canada; Eli Health is listed in its portfolio."
+        },
+        {
+          "url": "https://eli.health/blogs/resources/we-re-building-the-interface-to-the-human-body",
+          "title": "Eli Health raises $12M Series A",
+          "publisher": "Eli Health",
+          "evidence": "The company reports a $12M Series A led by BDC Thrive, with Muse and TELUS participating."
+        }
+      ]
+    },
+    {
+      "name": "Joyance Partners",
+      "thesis": "Biosensing interest evidenced by participation in Epicore; broader mandate needs current research.",
+      "partners": "Michael Edelhart \u2014 managing director in May 2025 announcement; reconfirm",
+      "stage": "Series B participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "A relevant biosensing candidate to investigate; investment in sweat sensing does not guarantee interest in saliva aptamers.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/epicore-biosystems-expands-series-b-to-32m-to-power-global-growth-of-sweat-sensing-wearable-technology-302443704.html",
+          "title": "Epicore extends Series B by $6M",
+          "publisher": "Epicore / PR Newswire",
+          "evidence": "An additional $6M takes Series B to $32M. Named participants include Alumni Ventures and Joyance Partners."
+        }
+      ]
+    },
+    {
+      "name": "Samsung Next",
+      "thesis": "AI, intelligent machines, healthtech, consumer services and frontier technology.",
+      "partners": "Jonathan Machado \u2014 managing director in October 2025 announcement; reconfirm",
+      "stage": "Series C participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Clinical wearables and trial-data overlap; strategic ecosystem fit needs assessment.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-secures-additional-series-c-extension-funding-to-39-million-from-key-strategic-investors-and-announces-new-board-of-director-appointments-302582505.html",
+          "title": "Sibel extends Series C to $39M",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Series C total reaches $39M; new strategic investors include Maruho and Samsung Next."
+        }
+      ]
+    },
+    {
+      "name": "Tether Investments",
+      "thesis": "Strategic investment in continuous health sensing and AI; QVAC integration with Eight Sleep.",
+      "partners": "Paolo Ardoino quoted as Tether CEO; deal lead unverified",
+      "stage": "Strategic growth investment observed",
+      "geography": "Global; verify mandate",
+      "fit_notes": "Sleep-health overlap, but scale and AI ecosystem motivations differ from an early-stage sensing venture.",
+      "sources": [
+        {
+          "url": "https://tether.io/news/tether-makes-strategic-investment-in-eight-sleep-at-1-5b-to-accelerate-sustainable-health-intelligence/",
+          "title": "Tether invests in Eight Sleep",
+          "publisher": "Tether Investments",
+          "evidence": "March 4, 2026 announcement states a $1.5B valuation but does not disclose the investment amount."
+        }
+      ]
+    },
+    {
+      "name": "Fidelity Management & Research",
+      "thesis": "Participated in Oura\u2019s growth financing; full investment mandate not researched.",
+      "partners": "Relevant partner not verified",
+      "stage": "Series E participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Useful capital-market comparable. Early-stage suitability has not been established.",
+      "sources": [
+        {
+          "url": "https://www.businesswire.com/news/home/20251014306417/en/URA-Raises-Over-%24900M-to-Accelerate-Global-Expansion-and-Health-Innovation",
+          "title": "Oura announces over $900M financing",
+          "publisher": "Oura / Business Wire",
+          "evidence": "Over $900M raised at approximately $11B valuation; Fidelity led with ICONIQ, Whale Rock and Atreides participating."
+        }
+      ]
+    },
+    {
+      "name": "ICONIQ",
+      "thesis": "Participated in Oura\u2019s growth financing; full investment mandate not researched.",
+      "partners": "Relevant partner not verified",
+      "stage": "Series E participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Useful capital-market comparable. Early-stage suitability has not been established.",
+      "sources": [
+        {
+          "url": "https://www.businesswire.com/news/home/20251014306417/en/URA-Raises-Over-%24900M-to-Accelerate-Global-Expansion-and-Health-Innovation",
+          "title": "Oura announces over $900M financing",
+          "publisher": "Oura / Business Wire",
+          "evidence": "Over $900M raised at approximately $11B valuation; Fidelity led with ICONIQ, Whale Rock and Atreides participating."
+        }
+      ]
+    },
+    {
+      "name": "Whale Rock",
+      "thesis": "Participated in Oura\u2019s growth financing; full investment mandate not researched.",
+      "partners": "Relevant partner not verified",
+      "stage": "Series E participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Useful capital-market comparable. Early-stage suitability has not been established.",
+      "sources": [
+        {
+          "url": "https://www.businesswire.com/news/home/20251014306417/en/URA-Raises-Over-%24900M-to-Accelerate-Global-Expansion-and-Health-Innovation",
+          "title": "Oura announces over $900M financing",
+          "publisher": "Oura / Business Wire",
+          "evidence": "Over $900M raised at approximately $11B valuation; Fidelity led with ICONIQ, Whale Rock and Atreides participating."
+        }
+      ]
+    },
+    {
+      "name": "Atreides",
+      "thesis": "Participated in Oura\u2019s growth financing; full investment mandate not researched.",
+      "partners": "Relevant partner not verified",
+      "stage": "Series E participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Useful capital-market comparable. Early-stage suitability has not been established.",
+      "sources": [
+        {
+          "url": "https://www.businesswire.com/news/home/20251014306417/en/URA-Raises-Over-%24900M-to-Accelerate-Global-Expansion-and-Health-Innovation",
+          "title": "Oura announces over $900M financing",
+          "publisher": "Oura / Business Wire",
+          "evidence": "Over $900M raised at approximately $11B valuation; Fidelity led with ICONIQ, Whale Rock and Atreides participating."
+        }
+      ]
+    },
+    {
+      "name": "TELUS Global Ventures",
+      "thesis": "Hormone-monitoring interest evidenced by Eli Health participation; broader mandate needs research.",
+      "partners": "Relevant partner not verified",
+      "stage": "Series A participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Investigate healthcare strategic fit and competing portfolio exposure.",
+      "sources": [
+        {
+          "url": "https://eli.health/blogs/resources/we-re-building-the-interface-to-the-human-body",
+          "title": "Eli Health raises $12M Series A",
+          "publisher": "Eli Health",
+          "evidence": "The company reports a $12M Series A led by BDC Thrive, with Muse and TELUS participating."
+        }
+      ]
+    },
+    {
+      "name": "Alumni Ventures",
+      "thesis": "Participated in Epicore\u2019s biosensing extension; broader mandate needs research.",
+      "partners": "Relevant partner not verified",
+      "stage": "Series B participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Potential biosensing interest; verify the relevant fund and early-stage decision maker.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/epicore-biosystems-expands-series-b-to-32m-to-power-global-growth-of-sweat-sensing-wearable-technology-302443704.html",
+          "title": "Epicore extends Series B by $6M",
+          "publisher": "Epicore / PR Newswire",
+          "evidence": "An additional $6M takes Series B to $32M. Named participants include Alumni Ventures and Joyance Partners."
+        }
+      ]
+    },
+    {
+      "name": "Steele Foundation for Hope",
+      "thesis": "Led prior rounds in wearable sensing companies; full mandate needs verification.",
+      "partners": "Relevant decision maker not verified",
+      "stage": "Series B/C participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Nontraditional funder with biosensing precedent. The legal form and investment process require verification.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/epicore-biosystems-expands-series-b-to-32m-to-power-global-growth-of-sweat-sensing-wearable-technology-302443704.html",
+          "title": "Epicore extends Series B by $6M",
+          "publisher": "Epicore / PR Newswire",
+          "evidence": "An additional $6M takes Series B to $32M. Named participants include Alumni Ventures and Joyance Partners."
+        },
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-secures-additional-series-c-extension-funding-to-39-million-from-key-strategic-investors-and-announces-new-board-of-director-appointments-302582505.html",
+          "title": "Sibel extends Series C to $39M",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Series C total reaches $39M; new strategic investors include Maruho and Samsung Next."
+        }
+      ]
+    },
+    {
+      "name": "Maruho",
+      "thesis": "Dermatology company with strategic wearable-health involvement.",
+      "partners": "Akihiko Ikoma \u2014 senior medical director quoted in 2025; not established as investment lead",
+      "stage": "Strategic participation observed",
+      "geography": "Japan; verify mandate",
+      "fit_notes": "Potential strategic collaborator; sleep/circadian relevance and investment remit are unverified.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-secures-additional-series-c-extension-funding-to-39-million-from-key-strategic-investors-and-announces-new-board-of-director-appointments-302582505.html",
+          "title": "Sibel extends Series C to $39M",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Series C total reaches $39M; new strategic investors include Maruho and Samsung Next."
+        }
+      ]
+    },
+    {
+      "name": "Dr\u00e4ger",
+      "thesis": "Medical-technology strategic investor in Sibel\u2019s clinical wearables.",
+      "partners": "Relevant decision maker not verified",
+      "stage": "Series C participation observed",
+      "geography": "Verify mandate",
+      "fit_notes": "Clinical monitoring overlap; verify investment mandate and relevance to research-first saliva sensing.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-secures-additional-series-c-extension-funding-to-39-million-from-key-strategic-investors-and-announces-new-board-of-director-appointments-302582505.html",
+          "title": "Sibel extends Series C to $39M",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Series C total reaches $39M; new strategic investors include Maruho and Samsung Next."
+        }
+      ]
+    },
+    {
+      "name": "ARPA-H",
+      "thesis": "Non-dilutive health research awards; the tracked award funds continuous edema monitoring.",
+      "partners": "Program contact not researched",
+      "stage": "SBIR Direct-to-Phase II award observed",
+      "geography": "United States; eligibility depends on solicitation",
+      "fit_notes": "Relevant wearable-health precedent. Check the current program, eligibility and technical objectives; this is not equity investment.",
+      "sources": [
+        {
+          "url": "https://www.prnewswire.com/news-releases/sibel-health-awarded-a-3-5-million-arpa-h-direct-to-phase-ii-sbir-contract-to-develop-a-first-in-class-wearable-sensor-for-continuous-edema-monitoring-302753528.html",
+          "title": "Sibel Health \u2014 ARPA-H SBIR contract",
+          "publisher": "Sibel Health / PR Newswire",
+          "evidence": "Announcement dated 2026-04-27 reports $3.5M for this financing or award."
+        }
+      ]
+    }
+  ]
+}
