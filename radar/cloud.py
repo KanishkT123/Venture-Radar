@@ -74,10 +74,10 @@ class Blob:
 
 
 class CloudStore:
-    READS = {'settings', 'investments', 'profiles', 'partner_profiles', 'edges', 'jobs'}
+    READS = {'settings', 'investments', 'profiles', 'partner_profiles', 'edges', 'jobs', 'investor_events'}
     WRITES = {'save_partner_profile', 'save_partner_draft', 'set_settings', 'add_investment', 'review', 'save_profile', 'investor_notes',
               'add_edge', 'delete_edge', 'enqueue', 'claim', 'finish', 'schedule_if_due',
-              'expire_jobs', 'apply_batch'}
+              'expire_jobs', 'apply_batch', 'save_investor_events'}
 
     def __init__(self, blob=None):
         self.blob = blob or Blob()

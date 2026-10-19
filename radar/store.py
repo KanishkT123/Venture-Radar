@@ -1,6 +1,7 @@
 """SQLite persistence; each method owns its transaction and connection."""
 import contextlib
 import datetime as dt
+import hashlib
 import json
 import sqlite3
 import time
@@ -29,6 +30,7 @@ class Store:
             CREATE INDEX IF NOT EXISTS event_match ON investments(company_key, round_key);
             CREATE TABLE IF NOT EXISTS profiles(name_key TEXT PRIMARY KEY, data TEXT, notes TEXT DEFAULT '', watched INTEGER DEFAULT 0, updated_at REAL);
             CREATE TABLE IF NOT EXISTS partner_profiles(firm_key TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at REAL, draft_subject TEXT, draft_message TEXT);
+            CREATE TABLE IF NOT EXISTS investor_events(id TEXT PRIMARY KEY, starts_on TEXT NOT NULL, data TEXT NOT NULL, updated_at REAL NOT NULL);
             CREATE TABLE IF NOT EXISTS edges(id TEXT PRIMARY KEY, data TEXT);
             CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, kind TEXT, payload TEXT, status TEXT,
                 created_at REAL, started_at REAL, ended_at REAL, attempts INTEGER DEFAULT 0, result TEXT, error TEXT);
@@ -200,7 +202,7 @@ class Store:
             c.execute('DELETE FROM edges WHERE id=?', (ident,))
 
     def enqueue(self, kind='discovery', payload=None, delivery_id=None):
-        if kind not in ('discovery', 'investor', 'partner'):
+        if kind not in ('discovery', 'investor', 'partner', 'events'):
             raise ValueError('Invalid workflow.')
         if kind == 'partner' and (not isinstance((payload or {}).get('investor'), str) or not 1 <= len(payload['investor'].strip()) <= 200):
             raise ValueError('Investor name required.')
@@ -211,6 +213,10 @@ class Store:
                 old = c.execute('SELECT job_id FROM deliveries WHERE id=?', (delivery_id,)).fetchone()
                 if old:
                     return old[0]
+            if kind == 'events':
+                active = c.execute("SELECT id FROM jobs WHERE kind='events' AND status IN ('queued','running') LIMIT 1").fetchone()
+                if active:
+                    return active['id']
             if kind == 'partner':
                 for row in c.execute("SELECT id,payload FROM jobs WHERE kind='partner' AND status IN ('queued','running')"):
                     if norm(json.loads(row['payload'])['investor']) == norm(payload['investor']):
@@ -224,6 +230,55 @@ class Store:
             if delivery_id:
                 c.execute('INSERT INTO deliveries VALUES(?,?,?)', (delivery_id, ident, time.time()))
             return ident
+
+    def save_investor_events(self, rows):
+        from .events import MAX_EVENTS, event, tracked_firms
+        if not isinstance(rows, list) or len(rows) > MAX_EVENTS:
+            raise ValueError('Invalid event batch size.')
+        firms = tracked_firms(self)
+        validated = [event(row, firms) for row in rows]
+        now = time.time()
+        with self.db() as c:
+            c.execute('BEGIN IMMEDIATE')
+            for item in validated:
+                # Alternate registration/source URLs merge, but recurring dates
+                # and differently named conference sessions remain separate.
+                key = '|'.join((norm(item['title']), item['starts_on'], norm(item['city'])))
+                ident = hashlib.sha256(key.encode()).hexdigest()
+                old = c.execute('SELECT data FROM investor_events WHERE id=?', (ident,)).fetchone()
+                if old:
+                    previous = json.loads(old['data'])
+                    updated_firms = {norm(f['firm']) for f in item['firms']}
+                    item['firms'] = [f for f in previous['firms'] if norm(f['firm']) not in updated_firms] + item['firms']
+                    item['sources'] = list({s['url']: s for s in previous['sources'] + item['sources']}.values())
+                c.execute('INSERT OR REPLACE INTO investor_events VALUES(?,?,?,?)',
+                          (ident, item['starts_on'], json.dumps(item), now))
+            c.execute('INSERT OR REPLACE INTO meta VALUES(?,?)', ('events_last_checked', json.dumps(now)))
+
+    def investor_events(self):
+        from .events import MA_TIMEZONE, WINDOW_DAYS, tracked_firms
+        if MA_TIMEZONE is None:
+            return {'events': [], 'last_checked_at': None, 'unavailable': 'Install IANA timezone data on the server to enable Massachusetts events. See README setup instructions.'}
+        now = dt.datetime.now(MA_TIMEZONE)
+        today = now.date()
+        firms = {norm(name) for name in tracked_firms(self)}
+        with self.db() as c:
+            saved = c.execute("SELECT value FROM meta WHERE key='events_last_checked'").fetchone()
+            rows = c.execute('SELECT * FROM investor_events WHERE starts_on>=? AND starts_on<=? ORDER BY starts_on,id',
+                             (today.isoformat(), (today + dt.timedelta(days=WINDOW_DAYS)).isoformat())).fetchall()
+        events = []
+        for row in rows:
+            item = json.loads(row['data'])
+            item['firms'] = [f for f in item['firms'] if norm(f['firm']) in firms]
+            if item['status'] != 'scheduled' or not item['firms']:
+                continue
+            end_day = item['ends_on'] or item['starts_on']
+            end_time = item['end_time'] or (item['start_time'] if not item['ends_on'] else None)
+            if end_time and dt.datetime.fromisoformat(end_day+'T'+end_time).replace(tzinfo=MA_TIMEZONE) <= now:
+                continue
+            events.append({**item, 'id': row['id'], 'updated_at': row['updated_at']})
+        events.sort(key=lambda e: (e['starts_on'], e['start_time'] or '23:59', e['title']))
+        return {'events': events, 'last_checked_at': json.loads(saved['value']) if saved else None}
 
     def jobs(self):
         with self.db() as c:
