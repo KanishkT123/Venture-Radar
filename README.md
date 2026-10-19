@@ -38,6 +38,16 @@ The score is `100 × [w × min(1, ln(1 + biggest_round_USD) / ln(1 + 1 billion))
 
 **Warm introductions:** add directed relationships from `You` to people/companies and onward to a firm. The app ranks paths of up to three hops, preferring confirmed relationships. Public portfolio connections are marked unverified. It cannot infer your private network from public news and never invents a mutual contact or sends outreach. Contact willingness still needs checking. The route-strength score is a heuristic, not a probability.
 
+## Massachusetts investor events
+
+The Investor dashboard includes a compact **Upcoming investor events** panel below its introduction. Click **Refresh** to search the next 90 days of in-person or hybrid Massachusetts events using the existing OpenAI key and model. Each row shows the event and city, date and published local time (ET), participating tracked firms, and an event link. A firm's linked name opens the source for its participation. Unpublished times stay unknown.
+
+Event dates use the `America/New_York` IANA timezone. Linux/Vercel normally supplies this data. On a host without it (notably some Windows Python installations), run `python -m pip install tzdata` and restart. The other dashboard features remain usable while timezone data is unavailable.
+
+Search uses the live investor-dashboard list, including unwatched and round-only investors, excluding entries identified as grantors. It does not filter by the firm's headquarters or the workspace's investment-research focus. Each match must cite a sponsor, host, speaker/panelist, or announced attendee relationship. A local office, a portfolio company's participation, historical attendance, or generic mentions of VCs are insufficient. Source-linked AI extraction still requires checking the original event details before attending; public listings are incomplete and search results are not a complete attendance roster.
+
+Event searches are manual, share the existing rolling daily run cap, and use at most six web-search tool calls followed by structured extraction. Duplicate clicks reuse an active event job. Opening the tab reads cached results without making paid calls. The existing investment schedule, global **Run research** button, rankings, and partner workflows are unchanged. Failures and empty searches retain prior matches; explicitly sourced cancellations and expired events are hidden. Matches persist in SQLite and private cloud snapshots and appear in JSON exports. Events with the same normalized title, start date and city merge; recurring dates and separately named sessions remain distinct. Only public firm names are supplied to this workflow, never private notes, saved drafts or the network graph.
+
 ## Research and reusable OpenAI skills
 
 The Python workflow loads these same instruction files used by Codex:
@@ -111,4 +121,4 @@ Connect the repository to Vercel for deployment on pushes. Python-only checks:
 python3 -m unittest discover -s tests -v
 ```
 
-Thirty-four tests cover validation, auth, signed webhooks, deduplication/revisions, persistence, ranking, introduction paths, research provenance, combined-source discovery, feed failures/limits/redirects and cloud write/claim concurrency. Live OpenAI calls require your key and are not part of the offline suite. See `docs/architecture.md` for deployment details. MIT licensed.
+Forty-eight Python tests cover validation, auth, signed webhooks, deduplication/revisions, persistence, ranking, introduction paths, research provenance, combined-source discovery, feed failures/limits/redirects, Massachusetts event matching and cloud write/claim concurrency. Optional Node rendering-logic checks run with `node tests/test_events_ui.cjs`; these use a minimal DOM double and do not replace browser visual QA. CI runs both checks. Live OpenAI calls require your key and are not part of the offline suite. See `docs/architecture.md` for deployment details. MIT licensed.

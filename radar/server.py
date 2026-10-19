@@ -79,6 +79,7 @@ def make_handler(store):
                     self.send({'settings': settings, 'investments': events,
                                'investors': rankings(events, store.profiles(), settings), 'edges': store.edges(),
                                'partner_profiles': store.partner_profiles(), 'jobs': store.jobs(), 'configured': bool(os.getenv('OPENAI_API_KEY')),
+                               'investor_events': store.investor_events(),
                                'model': os.getenv('OPENAI_MODEL', 'gpt-5.5'),
                                'hosted': bool(os.getenv('VERCEL')),
                                'webhook_configured': bool(os.getenv('RADAR_WEBHOOK_SECRET'))})
@@ -87,7 +88,8 @@ def make_handler(store):
                     self.send(paths(name, store.edges(), store.investments()))
                 elif p.path == '/api/export':
                     self.send({'schema_version': 1, 'settings': store.settings(), 'investments': store.investments(),
-                               'profiles': store.profiles(), 'partner_profiles': store.partner_profiles(), 'edges': store.edges(), 'jobs': store.jobs()}, attachment='venture-radar-export.json')
+                               'profiles': store.profiles(), 'partner_profiles': store.partner_profiles(), 'edges': store.edges(), 'jobs': store.jobs(),
+                               'investor_events': store.investor_events()}, attachment='venture-radar-export.json')
                 elif p.path == '/api/export.csv':
                     output = io.StringIO()
                     writer = csv.writer(output)
@@ -123,7 +125,14 @@ def make_handler(store):
                 d = json.loads(raw)
                 if not isinstance(d, dict):
                     raise ValueError('A JSON object is required.')
-                if is_hook or p in ('/api/refresh', '/api/investor/research', '/api/investor/deep-dive'):
+                if p == '/api/events/research':
+                    if not os.getenv('OPENAI_API_KEY'):
+                        raise ValueError('Set OPENAI_API_KEY in your environment and restart or redeploy first.')
+                    from .events import tracked_firms
+                    if not tracked_firms(store):
+                        raise ValueError('Add a tracked investor before researching events.')
+                    self.send({'job_id': store.enqueue('events')}, 202)
+                elif is_hook or p in ('/api/refresh', '/api/investor/research', '/api/investor/deep-dive'):
                     if not os.getenv('OPENAI_API_KEY'):
                         raise ValueError('Set OPENAI_API_KEY in your environment and restart or redeploy first.')
                     payload = {}

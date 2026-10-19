@@ -86,6 +86,9 @@ def feed_headlines(query):
 
 def run_research(store, job, client=None):
     client = client or OpenAI()
+    if job['kind'] == 'events':
+        from .events import run_event_research
+        return run_event_research(store, job, client)
     if job['kind'] == 'partner':
         from .partners import run_partner_research
         return run_partner_research(store, job, client)
